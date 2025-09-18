@@ -6,7 +6,6 @@ import userRouter from "./routes/userRoute.js"
 import jobRouter from "./routes/jobsRoute.js";
 import profileRouter from "./routes/profileRoute.js";
 
-
 // APP config
 const app = express();
 const port = process.env.PORT;
@@ -22,7 +21,6 @@ app.use('/api/v1/user/', userRouter);
 app.use('/api/v1/client/jobs/', jobRouter);
 app.use('/api/v1/jobs/', jobRouter);
 app.use('/api/v1/profile/', profileRouter);
-
 
 app.get('/', (req, res) => {
     res.json("API Initialized Successfully")

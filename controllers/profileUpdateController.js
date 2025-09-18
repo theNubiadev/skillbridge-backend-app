@@ -8,7 +8,8 @@ const updateFreelancerProfile = async (req, res) => {
       .findOneAndUpdate(
         { user: req.user._id }, // match logged-in user
         { $set: updates },
-        { new: true, runValidators: true, upsert: true } // upsert = create if not found
+        { new: true, runValidators: true, upsert: true }
+      // upsert = create if not found
       )
       .populate("user", "name email role");
     res.status(200).json({

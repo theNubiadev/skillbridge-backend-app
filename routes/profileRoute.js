@@ -15,4 +15,5 @@ profileRouter.get('/client/',  viewClientProfile);
 profileRouter.get('/freelancer/',  viewFreeelancerProfile);
 
 
+
 export default profileRouter;
