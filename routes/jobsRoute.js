@@ -21,6 +21,6 @@ jobRouter.get('/:id', authMiddleware, getJobById);
 jobRouter.delete("/delete/:id", authMiddleware, deleteJob);
 
 //  GET Apply for jobs
-jobRouter.get('/apply', authMiddleware, jobApplication);
+jobRouter.put('/apply/:id', authMiddleware, jobApplication);
 
 export default jobRouter;

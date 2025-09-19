@@ -133,18 +133,22 @@ const deleteJob = async (req, res) => {
 
 //  GET apply for jobs
 const jobApplication = async (req, res) => {
-  // res.status(200).json({
-  // success: true,
-  // message: "You can now apply for jobs"
-  // })
   try {
-    if (req.user.role !== "client") {
+    //  find job by id
+    const job = await jobsModel.findById(req.params.id);
+    if (!job) {
+      return res.json(404).json({
+        success: false,
+        message: "message not found",
+      });
+    }
+    //  this block ensures only freelancers can apply to jobs
+    if (req.user.role !== "freelancer") {
       return res.status(403).json({
         success: false,
         message: "Only freelancers can apply for jobs",
       });
     }
-
     //  find freelancer profile
     const freelancerProfile = await freelancerProfileModel.findOne({
       user: req.user._id,
@@ -158,7 +162,7 @@ const jobApplication = async (req, res) => {
     //  tieing job to applicant
     const applicant = new jobsModel({
       ...req.body,
-      applicant: freelancer_.id,
+      applicants: freelancerProfile._id
     });
 
     await applicant.save();
