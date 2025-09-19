@@ -139,7 +139,7 @@ const jobApplication = async (req, res) => {
     if (!job) {
       return res.json(404).json({
         success: false,
-        message: "message not found",
+        message: "Job not found",
       });
     }
     //  this block ensures only freelancers can apply to jobs
@@ -159,16 +159,34 @@ const jobApplication = async (req, res) => {
         message: "Freelancer profile not found",
       });
     }
-    //  tieing job to applicant
-    const applicant = new jobsModel({
-      ...req.body,
-      applicants: freelancerProfile._id
+    //  check if freelancer has already applied
+    // const alreadyApplied = job.applicant.some(
+    //   (app) => app.freelancer.toString() === freelancerProfile._id.toString()
+    // );
+    
+    const alreadyApplied = job.applicants.some(
+      (app) => app.freelancer.toString() === freelancerProfile._id.toString()
+    );
+
+    if (alreadyApplied) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied to this job",
+      });
+    }
+
+    //  add applicant to job
+    job.applicants.push({
+      freelancer: freelancerProfile._id,
+      coverLetter: req.body.coverLetter || "",
     });
 
-    await applicant.save();
-    res.status(201).json({
+    await job.save();
+
+    res.status(200).json({
       success: true,
-      data: applicant,
+      message: "Application submitted successfully",
+      data: job,
     });
   } catch (error) {
     res.status(500).json({
@@ -178,6 +196,85 @@ const jobApplication = async (req, res) => {
   }
 };
 
+//  GET all applications for a job
+// const getJobApplicants = async (req, res) => {
+//   try {
+//     const job = await jobsModel.findById(req.params.id)
+//     .populate({
+//       path: "applicants.freelancer",  // populate freelancer details
+//       populate: {
+//         path: "user",  // populate the base user fields name , email etc
+//         model: "User"
+//       }
+//     });
+  
+//   if (!job) {
+//     return res.status(404).json({
+//       success: false,
+//       message: "Job not found",
+//     });
+//   }
+  
+//   //  ensure only client who posted the job can see applicants
+//   if (job.client.toString() == req.user._id.toString()) {
+//     return res.status(403).json({
+//       success: false,
+//       message: "You are not authorized to view applicants for this job"
+//     });
+//   }
+
+//   res.status(200).json({
+//     success: true,
+//     applicants: job.applicants,
+//   })
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message
+//     })
+//   }
+// }
+
+// GET /api/jobs/:id/applicants
+const getJobApplicants = async (req, res) => {
+  try {
+    const job = await jobsModel.findById(req.params.id)
+      .populate({
+        path: "applicants.freelancer", // populate freelancer details
+        populate: {
+          path: "user", // populate the base user fields (name, email, etc.)
+          model: "User"
+        }
+      });
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    // Ensure only the client who posted the job can see the applicants
+    if (job.client.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view applicants for this job",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      applicants: job.applicants,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 export {
   jobPosted,
   jobListing,
@@ -185,4 +282,5 @@ export {
   updateJob,
   deleteJob,
   jobApplication,
+  getJobApplicants
 };
