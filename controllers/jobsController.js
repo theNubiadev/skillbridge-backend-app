@@ -1,5 +1,6 @@
 import jobsModel from "../models/jobsModel.js";
 import clientProfileModel from "../models/clientProfileModel.js";
+import freelancerProfileModel from "../models/freelancerProfileModel.js";
 
 //  Post Jobs by Client
 const jobPosted = async (req, res) => {
@@ -45,7 +46,7 @@ const jobListing = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
-    });  
+    });
   }
 };
 
@@ -76,14 +77,14 @@ const updateJob = async (req, res) => {
     if (!job) {
       return res.json(404).json({
         success: false,
-        message: "Job not found"
+        message: "Job not found",
       });
     }
     //  check if the logged-in-user is the owner of the job
     if (job.client.toString() == req.user._id.toString()) {
       return res.status(403).json({
         success: false,
-        message: "You are not authorized to update this job"
+        message: "You are not authorized to update this job",
       });
     }
     //  update the job
@@ -94,13 +95,13 @@ const updateJob = async (req, res) => {
     );
     res.status(200).json({
       success: true,
-      data: updatedJob
-    })
+      data: updatedJob,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
 };
 
@@ -130,4 +131,54 @@ const deleteJob = async (req, res) => {
   }
 };
 
-export { jobPosted, jobListing, getJobById, updateJob, deleteJob };
+//  GET apply for jobs
+const jobApplication = async (req, res) => {
+  // res.status(200).json({
+  // success: true,
+  // message: "You can now apply for jobs"
+  // })
+  try {
+    if (req.user.role !== "client") {
+      return res.status(403).json({
+        success: false,
+        message: "Only freelancers can apply for jobs",
+      });
+    }
+
+    //  find freelancer profile
+    const freelancerProfile = await freelancerProfileModel.findOne({
+      user: req.user._id,
+    });
+    if (!freelancerProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Freelancer profile not found",
+      });
+    }
+    //  tieing job to applicant
+    const applicant = new jobsModel({
+      ...req.body,
+      applicant: freelancer_.id,
+    });
+
+    await applicant.save();
+    res.status(201).json({
+      success: true,
+      data: applicant,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  jobPosted,
+  jobListing,
+  getJobById,
+  updateJob,
+  deleteJob,
+  jobApplication,
+};
