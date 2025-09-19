@@ -26,6 +26,13 @@ const registerUser = async (req, res) => {
                     message: "Please enter a valid email"
                 });
             }
+            //  
+            if (!name) {
+                return res.json({
+                    success: false,
+                    message: "Name field is empty"
+                })
+            }
             //  checking the password length
             if (password.length < 8) {
                return  res.json({

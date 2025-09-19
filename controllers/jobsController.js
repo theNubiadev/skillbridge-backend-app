@@ -73,7 +73,6 @@ const updateJob = async (req, res) => {
   try {
     //  find job by ID first
     const job = await jobsModel.findById(req.params.id);
-
     if (!job) {
       return res.json(404).json({
         success: false,
