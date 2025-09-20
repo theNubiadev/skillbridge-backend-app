@@ -196,44 +196,6 @@ const jobApplication = async (req, res) => {
   }
 };
 
-//  GET all applications for a job
-// const getJobApplicants = async (req, res) => {
-//   try {
-//     const job = await jobsModel.findById(req.params.id)
-//     .populate({
-//       path: "applicants.freelancer",  // populate freelancer details
-//       populate: {
-//         path: "user",  // populate the base user fields name , email etc
-//         model: "User"
-//       }
-//     });
-  
-//   if (!job) {
-//     return res.status(404).json({
-//       success: false,
-//       message: "Job not found",
-//     });
-//   }
-  
-//   //  ensure only client who posted the job can see applicants
-//   if (job.client.toString() == req.user._id.toString()) {
-//     return res.status(403).json({
-//       success: false,
-//       message: "You are not authorized to view applicants for this job"
-//     });
-//   }
-
-//   res.status(200).json({
-//     success: true,
-//     applicants: job.applicants,
-//   })
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: error.message
-//     })
-//   }
-// }
 
 // GET /api/jobs/:id/applicants
 const getJobApplicants = async (req, res) => {
@@ -253,15 +215,13 @@ const getJobApplicants = async (req, res) => {
         message: "Job not found",
       });
     }
-
     // Ensure only the client who posted the job can see the applicants
-    if (job.client.toString() !== req.user._id.toString()) {
+    if (job.client.toString() == req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view applicants for this job",
       });
     }
-
     res.status(200).json({
       success: true,
       applicants: job.applicants,

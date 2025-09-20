@@ -20,9 +20,9 @@ jobRouter.get('/:id', authMiddleware, getJobById);
 // DELETE: Remove job
 jobRouter.delete("/delete/:id", authMiddleware, deleteJob);
 
-//  PUT Apply for jobs
+// PUT: Apply for jobs
 jobRouter.put('/:id/apply', authMiddleware, jobApplication);
 
-//  GET all job applicants
-jobRouter.get("/jobs/applicants/:id", authMiddleware, getJobApplicants)
+// GET: all job applicants
+jobRouter.get("/:id/applicants", authMiddleware, getJobApplicants)
 export default jobRouter;
