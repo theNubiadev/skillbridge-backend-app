@@ -159,11 +159,6 @@ const jobApplication = async (req, res) => {
         message: "Freelancer profile not found",
       });
     }
-    //  check if freelancer has already applied
-    // const alreadyApplied = job.applicant.some(
-    //   (app) => app.freelancer.toString() === freelancerProfile._id.toString()
-    // );
-    
     const alreadyApplied = job.applicants.some(
       (app) => app.freelancer.toString() === freelancerProfile._id.toString()
     );
@@ -203,9 +198,11 @@ const getJobApplicants = async (req, res) => {
     const job = await jobsModel.findById(req.params.id)
       .populate({
         path: "applicants.freelancer", // populate freelancer details
+        select: "bio skills hourlyRate portfolio",
         populate: {
           path: "user", // populate the base user fields (name, email, etc.)
-          model: "User"
+          model: "User",
+          select: "name"
         }
       });
 
