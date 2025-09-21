@@ -243,8 +243,7 @@ const decideApplication = async (req, res) => {
           message: "Decision must either be 'accepted' or 'rejected'"
         })
       }
-
-      //  find job posted by the loged-in client
+      //  find job posted by the logged-in client
       const job = await jobsModel.findOne({
         _id: jobId,
         client: req.user._id,
@@ -256,7 +255,7 @@ const decideApplication = async (req, res) => {
         });
       }
       //  find applicant inside the job
-      const applicant = job.applicants.id(applicantId);
+      const applicant = job.applicants._id(applicantId);
       if (!applicant) {
         return res.status(404).json({
           success: false, 
@@ -291,20 +290,17 @@ const updateJobStatus = async (req, res) => {
         message: "invalid status"
       });
     }
-
     const job = await jobsModel.findOneAndUpdate(
       { _id: id, client: req.user._id },
       { $set: { status } },
       { new: true, runValidators: true }
     );
-
     if (!job) {
       return res.status(404).json({
         success: false,
         message: "Job not found"
        })
     };
-
     res.status(200).json({
       success: true,
       message: `Job ststus updated to ${status}`,
