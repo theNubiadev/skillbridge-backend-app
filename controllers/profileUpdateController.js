@@ -1,6 +1,7 @@
 import freelancerProfileModel from "../models/freelancerProfileModel.js";
 import clientProfile from "../models/clientProfileModel.js";
 
+//  update freelancer profile
 const updateFreelancerProfile = async (req, res) => {
   try {
     const updates = req.body;
@@ -23,9 +24,9 @@ const updateFreelancerProfile = async (req, res) => {
     });
   }
 };
-
+// update client profile
 const updateClientProfile = async (req, res) => {
-  try {
+  try { 
     const updates = req.body;
     const profile = await clientProfile
       .findOneAndUpdate(
@@ -45,7 +46,7 @@ const updateClientProfile = async (req, res) => {
     });
   }
 };
-
+//  view freelancer profile
 const viewFreeelancerProfile = async (req, res) => {
   try {
     const freelancer = await freelancerProfileModel
@@ -62,7 +63,7 @@ const viewFreeelancerProfile = async (req, res) => {
     });
   }
 };
-
+//  view client profile
 const viewClientProfile = async (req, res) => {
   try {
     const client = await clientProfile.find().populate("user", "name email");
