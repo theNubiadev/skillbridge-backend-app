@@ -231,6 +231,94 @@ const getJobApplicants = async (req, res) => {
   }
 };
 
+const decideApplication = async (req, res) => {
+    try {
+      const { jobId, applicantId } = req.params;
+      const { decision } = req.body;   // "accept" or "reject"
+
+      //  validate decision
+      if (!["accepted", "rejected"].includes(decision)) {
+        return res.status(400).json({
+          success: false,
+          message: "Decision must either be 'accepted' or 'rejected'"
+        })
+      }
+
+      //  find job posted by the loged-in client
+      const job = await jobsModel.findOne({
+        _id: jobId,
+        client: req.user._id,
+      });
+      if (!job) {
+        return res.status(404).json({
+          success: false,
+          message: "Job not found"
+        });
+      }
+      //  find applicant inside the job
+      const applicant = job.applicants.id(applicantId);
+      if (!applicant) {
+        return res.status(404).json({
+          success: false, 
+          message: "Applicant not found"
+        })
+      }
+      applicant.status = decision; // updates statuus
+      await job.save();
+
+      res.status(200).json({
+        success: true,
+        message: `Application ${decision} successfully`,
+        data: applicant
+      })
+    } catch (error) {
+      console.error("Error deciding application:", error)
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      })
+    }
+}
+//  update job status
+const updateJobStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["open", "in-progress", "completed", "closed"].includes(status) ) {
+      return res.status(400).json({
+        success: false,
+        message: "invalid status"
+      });
+    }
+
+    const job = await jobsModel.findOneAndUpdate(
+      { _id: id, client: req.user._id },
+      { $set: { status } },
+      { new: true, runValidators: true }
+    );
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found"
+       })
+    };
+
+    res.status(200).json({
+      success: true,
+      message: `Job ststus updated to ${status}`,
+      data:job
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+
 
 export {
   jobPosted,
@@ -239,5 +327,7 @@ export {
   updateJob,
   deleteJob,
   jobApplication,
-  getJobApplicants
+  getJobApplicants,
+  decideApplication,
+  updateJobStatus
 };

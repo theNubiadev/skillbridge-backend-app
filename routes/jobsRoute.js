@@ -1,5 +1,8 @@
 import express from "express"
-import { jobPosted, jobListing, getJobById, updateJob , deleteJob, jobApplication, getJobApplicants} from "../controllers/jobsController.js"
+import {
+    jobPosted, jobListing, getJobById, updateJob, deleteJob,
+    jobApplication, getJobApplicants, decideApplication, updateJobStatus
+} from "../controllers/jobsController.js"
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 
@@ -24,5 +27,13 @@ jobRouter.delete("/delete/:id", authMiddleware, deleteJob);
 jobRouter.put('/:id/apply', authMiddleware, jobApplication);
 
 // GET: all job applicants
-jobRouter.get("/:id/applicants", authMiddleware, getJobApplicants)
+jobRouter.get("/:id/applicants", authMiddleware, getJobApplicants);
+
+// PUT Approve/Reject applicant
+jobRouter.patch('/:id/applicants/:applicantId/decision', authMiddleware, decideApplication);
+
+// PUT Update Job status
+jobRouter.put('/:id/status', authMiddleware, updateJobStatus);
+
+
 export default jobRouter;
