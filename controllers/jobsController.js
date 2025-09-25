@@ -142,6 +142,7 @@ const jobApplication = async (req, res) => {
         message: "Job not found",
       });
     }
+    //  isaiah 40:29
     //  this block ensures only freelancers can apply to jobs
     if (req.user.role !== "freelancer") {
       return res.status(403).json({
@@ -190,6 +191,7 @@ const jobApplication = async (req, res) => {
     });
   }
 };
+
 
 
 // GET /api/jobs/:id/applicants
@@ -244,10 +246,17 @@ const decideApplication = async (req, res) => {
         })
       }
       //  find job posted by the logged-in client
-      const job = await jobsModel.findOne({
-        _id: jobId,
-        client: req.user._id,
-      });
+      // const job = await jobsModel.findOne({
+      //   _id: jobId,
+      //   client: req.user._id,
+      // });
+      // if (!job) {
+      //   return res.status(404).json({
+      //     success: false,
+      //     message: "Job not found"
+      //   });
+      // }
+      const job = await jobsModel.findById(jobId);
       if (!job) {
         return res.status(404).json({
           success: false,
@@ -255,14 +264,14 @@ const decideApplication = async (req, res) => {
         });
       }
       //  find applicant inside the job
-      const applicant = job.applicants._id(applicantId);
+      const applicant = job.applicants.id(applicantId);
       if (!applicant) {
         return res.status(404).json({
           success: false, 
           message: "Applicant not found"
         })
       }
-      applicant.status = decision; // updates statuus
+      applicant.status = decision; // updates status
       await job.save();
 
       res.status(200).json({
