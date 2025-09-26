@@ -318,6 +318,8 @@ const updateJobStatus = async (req, res) => {
       });
     }
 
+    //   adding a condition statement to fetch and display jobs by the client
+    
     //  fetch all jobs for this client and sort by custom status order
     const jobs = await jobsModel.aggregate([
       { $match: { client: req.user.clientProfileId} },
