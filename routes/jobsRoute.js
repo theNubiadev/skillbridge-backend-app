@@ -30,7 +30,7 @@ jobRouter.put('/:id/apply', authMiddleware, jobApplication);
 jobRouter.get("/:id/applicants", authMiddleware, getJobApplicants);
 
 // PUT Approve/Reject applicant
-jobRouter.patch('/:id/applicants/:applicantId/decision', authMiddleware, decideApplication);
+jobRouter.patch('/:jobId/applicants/:applicantId/decision', authMiddleware, decideApplication);
 
 // PUT Update Job status
 jobRouter.put('/:id/status', authMiddleware, updateJobStatus);
