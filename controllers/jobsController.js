@@ -110,7 +110,7 @@ const deleteJob = async (req, res) => {
   try {
     const job = await jobsModel.findOneAndDelete({
       _id: req.params.id,
-      client: req.user._id, // only owner/ author can delete
+      client: req.user.clientProfileId, // only owner/ author can delete
     });
 
     if (!job) {
@@ -192,21 +192,18 @@ const jobApplication = async (req, res) => {
   }
 };
 
-
-
 // GET /api/jobs/:id/applicants
 const getJobApplicants = async (req, res) => {
   try {
-    const job = await jobsModel.findById(req.params.id)
-      .populate({
-        path: "applicants.freelancer", // populate freelancer details
-        select: "bio skills hourlyRate portfolio",
-        populate: {
-          path: "user", // populate the base user fields (name, email, etc.)
-          model: "User",
-          select: "name"
-        }
-      });
+    const job = await jobsModel.findById(req.params.id).populate({
+      path: "applicants.freelancer", // populate freelancer details
+      select: "bio skills hourlyRate portfolio",
+      populate: {
+        path: "user", // populate the base user fields (name, email, etc.)
+        model: "User",
+        select: "name",
+      },
+    });
 
     if (!job) {
       return res.status(404).json({
@@ -234,96 +231,128 @@ const getJobApplicants = async (req, res) => {
 };
 
 const decideApplication = async (req, res) => {
-    try {
-      const { jobId, applicantId } = req.params;
-      const { decision } = req.body;   // "accept" or "reject"
+  try {
+    const { jobId, applicantId } = req.params;
+    const { decision } = req.body; // "accept" or "reject"
 
-      //  validate decision
-      if (!["accepted", "rejected"].includes(decision)) {
-        return res.status(400).json({
-          success: false,
-          message: "Decision must either be 'accepted' or 'rejected'"
-        })
-      }
-      //  find job posted by the logged-in client
-      // const job = await jobsModel.findOne({
-      //   _id: jobId,
-      //   client: req.user._id,
-      // });
-      // if (!job) {
-      //   return res.status(404).json({
-      //     success: false,
-      //     message: "Job not found"
-      //   });
-      // }
-      const job = await jobsModel.findById(jobId);
-      if (!job) {
-        return res.status(404).json({
-          success: false,
-          message: "Job not found"
-        });
-      }
-      //  find applicant inside the job
-      const applicant = job.applicants.id(applicantId);
-      if (!applicant) {
-        return res.status(404).json({
-          success: false, 
-          message: "Applicant not found"
-        })
-      }
-      applicant.status = decision; // updates status
-      await job.save();
-
-      res.status(200).json({
-        success: true,
-        message: `Application ${decision} successfully`,
-        data: applicant
-      })
-    } catch (error) {
-      console.error("Error deciding application:", error)
-      return res.status(500).json({
+    //  validate decision
+    if (!["accepted", "rejected"].includes(decision)) {
+      return res.status(400).json({
         success: false,
-        message: error.message
-      })
+        message: "Decision must either be 'accepted' or 'rejected'",
+      });
     }
-}
+
+    //  get the client profile for the logged-in user
+    const clientProfile = await clientProfileModel.findOne({
+      user: req.user._id,
+    });
+    if (!clientProfile) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not registered as a client",
+      });
+    }
+    //  find job posted by the logged-in client
+    const job = await jobsModel.findById({
+      _id: jobId,
+      client: clientProfile._id,
+    });
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found or owned by you",
+      });
+    }
+    //  find applicant inside the job
+    const applicant = job.applicants.id(applicantId);
+    if (!applicant) {
+      return res.status(404).json({
+        success: false,
+        message: "Applicant not found",
+      });
+    }
+    // isaiah 40:23
+    applicant.status = decision; // updates status
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Application ${decision} successfully`,
+      data: applicant,
+    });
+  } catch (error) {
+    console.error("Error deciding application:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 //  update job status
 const updateJobStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    console.log("JobId:", id);
+    console.log("ClientId from token:", req.user._id);
+    console.log("req.params:", req.params);
+    console.log("Requested status:", status);
 
-    if (!["open", "in-progress", "completed", "closed"].includes(status) ) {
+    if (!["open", "in-progress", "completed", "closed"].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "invalid status"
+        message: "invalid status",
       });
     }
+    //  update the job status
     const job = await jobsModel.findOneAndUpdate(
-      { _id: id, client: req.user._id },
+      { _id: id, client: req.user.clientProfileId }, // ensure the job belongs to the logged-in client
       { $set: { status } },
       { new: true, runValidators: true }
     );
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found"
-       })
-    };
+        message: "Job not found",
+      });
+    }
+
+    //  fetch all jobs for this client and sort by custom status order
+    const jobs = await jobsModel.aggregate([
+      { $match: { client: req.user.clientProfileId} },
+      {
+        $addFields: {
+          sortOrder: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$status", "open"] }, then: 1 },
+                { case: { $eq: ["$status", "in-progress"] }, then: 2 },
+                { case: { $eq: ["$status", "completed"] }, then: 3 },
+                { case: { $eq: ["$status", "closed"] }, then: 4 },
+              ],
+              default: 5,
+            },
+          },
+        },
+      },
+      { $sort: { sortOrder: 1, createdAt: -1 } }, // sort by the custom status order first, then by creation date
+      { $project: { sortOrder: 0 } }, // exclude sortOrder from final output
+    ]);
+
     res.status(200).json({
       success: true,
-      message: `Job ststus updated to ${status}`,
-      data:job
-    })
+      message: `Job status updated to ${status}`,
+      updatedJob: job,
+      allJobs: jobs,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
-}
-
-
+};
 
 export {
   jobPosted,
@@ -334,5 +363,5 @@ export {
   jobApplication,
   getJobApplicants,
   decideApplication,
-  updateJobStatus
+  updateJobStatus,
 };
