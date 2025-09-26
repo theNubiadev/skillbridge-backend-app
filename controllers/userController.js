@@ -2,8 +2,6 @@ import  jwt  from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import userModel from "../models/userModels.js";
 import validator from "validator";
-import freelancerProfileModel from "../models/freelancerProfileModel.js";
-import cllientProfileModel from "../models/clientProfileModel.js";
 
 //  token creation 
 const createToken = (id) => {
@@ -11,7 +9,6 @@ const createToken = (id) => {
 }
 // POST  User Register
 const registerUser = async (req, res) => {
-        // res.json({ success: true, msg: 'Register  API endpoint working'});
         try {
             const { name, email, password, role } = req.body;
             //  checks if user exists or not
@@ -62,7 +59,6 @@ const registerUser = async (req, res) => {
             });
         }
 }
-
 // POST  User Login
 const loginUser = async (req, res) => {
     // res.json({ success: true,  msg: 'Login Api Endpoint ' });
@@ -86,7 +82,6 @@ const loginUser = async (req, res) => {
         res.json({ success: false, message: "Invalid Details" });
     }
 }
-
 export {
     loginUser,
     registerUser
