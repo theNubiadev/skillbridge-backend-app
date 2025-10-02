@@ -319,7 +319,7 @@ const updateJobStatus = async (req, res) => {
     }
 
     //   adding a condition statement to fetch and display jobs by the client
-    
+
     //  fetch all jobs for this client and sort by custom status order
     const jobs = await jobsModel.aggregate([
       { $match: { client: req.user.clientProfileId} },
@@ -356,6 +356,64 @@ const updateJobStatus = async (req, res) => {
   }
 };
 
+const getAppliedJobs = async (req, res) => {
+  try {
+    //  ensures only freelancer can access
+    if (req.user.role !== "freelancer") {
+      return res.status(403).json({
+        success: false,
+        message: "Only freelancers can view applied jobs"
+      });
+    }
+
+    //  find the freelancer profile
+   const freelancerProfile = await freelancerProfileModel.findOne({
+      user: req.user._id,
+    });
+    if (!freelancerProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Freelancer profile not found",
+      });
+    }
+    //  find jobs where this freelancer has applied 
+    const jobs = await jobsModel.find({
+      "applicants.freelancer": freelancerProfile._id,
+    }).select("title category status applicants");
+
+    //  filter to show applicant application in such job
+    const appliedJobs = jobs.map((job) => {
+      const application = job.applicants.find(
+        (a) => a.freelancer.toString() === freelancerProfile._id.toString()
+      );
+
+      return {
+        _id: job._id,
+        title: job.title,
+        category: job.category,
+        status: job.status,
+        application: {
+          coverLetter: application.coverLetter,
+          appliedAt: application.appliedAt,
+          status: application.ststus,
+        },
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: appliedJobs
+    });
+
+  } catch (error) {
+    console.error("Error fetching applied jobs", error);
+    res.status(200).json({
+      success: false,
+      message: error.message
+    })    
+  }
+}
+
 export {
   jobPosted,
   jobListing,
@@ -366,4 +424,9 @@ export {
   getJobApplicants,
   decideApplication,
   updateJobStatus,
+  getAppliedJobs,
 };
+
+
+
+// fortitude
