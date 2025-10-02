@@ -379,7 +379,7 @@ const getAppliedJobs = async (req, res) => {
     //  find jobs where this freelancer has applied 
     const jobs = await jobsModel.find({
       "applicants.freelancer": freelancerProfile._id,
-    }).select("title category status applicants");
+    }).select("title category status applicants hourlyRate");
 
     //  filter to show applicant application in such job
     const appliedJobs = jobs.map((job) => {
@@ -392,6 +392,7 @@ const getAppliedJobs = async (req, res) => {
         title: job.title,
         category: job.category,
         status: job.status,
+        hourlyRate: job.hourlyRate,
         application: {
           coverLetter: application.coverLetter,
           appliedAt: application.appliedAt,
