@@ -1,7 +1,8 @@
 import express from "express"
 import {
     jobPosted, jobListing, getJobById, updateJob, deleteJob,
-    jobApplication, getJobApplicants, decideApplication, updateJobStatus
+    jobApplication, getJobApplicants, decideApplication, updateJobStatus,
+    getAppliedJobs
 } from "../controllers/jobsController.js"
 import authMiddleware from "../middlewares/authMiddleware.js";
 
@@ -16,6 +17,9 @@ jobRouter.put('/edit/:id', authMiddleware, updateJob);
 
 // GET: Anyone can fetch all jobs
 jobRouter.get('/', jobListing);
+
+// GET Freelancers Applied Jobs
+jobRouter.get('/applied', authMiddleware, getAppliedJobs);
 
 // GET: Fetch a single job by ID
 jobRouter.get('/:id', authMiddleware, getJobById);
@@ -34,6 +38,7 @@ jobRouter.patch('/:jobId/applicants/:applicantId/decision', authMiddleware, deci
 
 // PUT Update Job status
 jobRouter.put('/:id/status', authMiddleware, updateJobStatus);
+
 
 
 export default jobRouter;
