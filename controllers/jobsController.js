@@ -407,8 +407,8 @@ const getAppliedJobs = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error fetching applied jobs", error);
-    res.status(200).json({
+    // console.error("Error fetching applied jobs", error);
+    res.status(500).json({
       success: false,
       message: error.message
     })    
